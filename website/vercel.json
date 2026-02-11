@@ -1,0 +1,45 @@
+{
+  "headers": [
+    {
+      "source": "/wp-admin/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/wordpress/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/wp-admin/:path*",
+      "destination": "/404",
+      "permanent": false
+    },
+    {
+      "source": "/wordpress/:path*",
+      "destination": "/404",
+      "permanent": false
+    },
+    {
+      "source": "/wp-login.php",
+      "destination": "/404",
+      "permanent": false
+    },
+    {
+      "source": "/wp-content/:path*",
+      "destination": "/404",
+      "permanent": false
+    }
+  ]
+}
+

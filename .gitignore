@@ -1,0 +1,18 @@
+# Dependencies and build outputs
+node_modules/
+.next/
+*.tsbuildinfo
+
+# AutoCount API build outputs (avoids long path errors on Windows)
+autocount-api/**/bin/
+autocount-api/**/obj/
+autocount-api/**/publish/
+autocount-api.zip
+
+# Env and secrets
+.env
+.env.local
+*.env
+
+# Convex generated
+website/convex/_generated/

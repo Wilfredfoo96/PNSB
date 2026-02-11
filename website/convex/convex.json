@@ -6,6 +6,6 @@
     "name": "clerk-convex-login"
   },
   "production": {
-    "url": "your_convex_production_url_here"
+    "url": "https://merry-newt-905.convex.cloud"
   }
 }

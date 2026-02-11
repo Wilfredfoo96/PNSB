@@ -23,9 +23,11 @@ module.exports = {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "hsl(var(--primary))",
+          DEFAULT: "#1e40af",
           foreground: "hsl(var(--primary-foreground))",
         },
+        "background-light": "#f3f4f6",
+        "background-dark": "#0f172a",
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
@@ -51,7 +53,11 @@ module.exports = {
           foreground: "hsl(var(--card-foreground))",
         },
       },
+      fontFamily: {
+        display: ["Inter", "sans-serif"],
+      },
       borderRadius: {
+        DEFAULT: "0.5rem",
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",

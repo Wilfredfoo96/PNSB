@@ -1,0 +1,1 @@
+$isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator); if ($isAdmin) { Write-Host "Running as Administrator" -ForegroundColor Green } else { Write-Host "NOT running as Administrator - need to elevate" -ForegroundColor Red }
