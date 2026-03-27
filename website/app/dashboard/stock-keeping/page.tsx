@@ -34,7 +34,7 @@ function relativeTime(ms: number): string {
   if (sec < 3600) return `${Math.floor(sec / 60)}m ago`
   if (sec < 86400) return `${Math.floor(sec / 3600)}h ago`
   if (sec < 604800) return `${Math.floor(sec / 86400)}d ago`
-  return new Date(ms).toLocaleDateString()
+  return new Date(ms).toLocaleDateString('en-GB')
 }
 
 function lastMovementSummary(
@@ -79,7 +79,7 @@ interface MergedStockItem {
   notes?: string
 }
 
-const REASON_OPTIONS = ['Stock take', 'Damage', 'Received', 'Other'] as const
+const REASON_OPTIONS = ['Received +', 'Damage -', 'Loss -', 'Adjustment +', 'Adjustment -'] as const
 
 export default function StockKeepingPage() {
   const { user } = useUser()
@@ -120,7 +120,6 @@ export default function StockKeepingPage() {
   const [editNewQty, setEditNewQty] = useState('')
   const [editRemarks, setEditRemarks] = useState('')
   const [editReason, setEditReason] = useState('')
-  const [editReasonOther, setEditReasonOther] = useState('')
   const [editSaving, setEditSaving] = useState(false)
   const [editSuccess, setEditSuccess] = useState<string | null>(null)
 
@@ -192,7 +191,6 @@ export default function StockKeepingPage() {
     setEditNewQty(String(stock.quantity))
     setEditRemarks(stock.notes ?? '')
     setEditReason('')
-    setEditReasonOther('')
     setEditSuccess(null)
   }
 
@@ -207,7 +205,7 @@ export default function StockKeepingPage() {
     setEditSaving(true)
     setEditSuccess(null)
     try {
-      const notes = editRemarks.trim() || (editReason === 'Other' ? editReasonOther : editReason) || undefined
+      const notes = editRemarks.trim() || editReason || undefined
       await updateQuantity({
         itemCode: editItemCode,
         quantity: newQty,
@@ -220,7 +218,6 @@ export default function StockKeepingPage() {
         setEditNewQty('')
         setEditRemarks('')
         setEditReason('')
-        setEditReasonOther('')
         setEditSuccess(null)
       }, 2000)
     } catch (err) {
@@ -442,7 +439,7 @@ export default function StockKeepingPage() {
                   <tbody>
                     {movementLogs.map((log) => (
                       <tr key={log._id} className="border-b hover:bg-gray-50">
-                        <td className="p-2 whitespace-nowrap">{new Date(log.createdAt).toLocaleString()}</td>
+                        <td className="p-2 whitespace-nowrap">{new Date(log.createdAt).toLocaleString('en-GB')}</td>
                         <td className="p-2">{formatMovementType(log.movementType)}</td>
                         <td className="p-2 text-right text-green-600 tabular-nums">
                           {log.quantityDelta > 0 ? log.quantityDelta.toFixed(2) : '—'}
@@ -519,14 +516,6 @@ export default function StockKeepingPage() {
                         <option key={r} value={r}>{r}</option>
                       ))}
                     </select>
-                    {editReason === 'Other' && (
-                      <Input
-                        placeholder="Specify reason..."
-                        value={editReasonOther}
-                        onChange={(e) => setEditReasonOther(e.target.value)}
-                        className="mt-2"
-                      />
-                    )}
                   </div>
                   <div className="flex gap-2 pt-2">
                     <Button type="submit" disabled={editSaving}>

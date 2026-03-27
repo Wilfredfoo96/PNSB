@@ -13,6 +13,7 @@ import { api } from '@/convex/_generated/api'
 import { Id } from '@/convex/_generated/dataModel'
 import { useUserRole } from '@/hooks/useUserRole'
 import { getPermissionsForRole } from '@/lib/permissions'
+import { formatISODateToDDMMYYYY, parseDDMMYYYYToISO } from '@/lib/utils'
 
 interface TemporaryReceipt {
   _id: string
@@ -609,7 +610,7 @@ export default function TemporaryReceiptsPage() {
                       <tr key={receipt._id} className="border-b hover:bg-gray-50">
                         <td className="p-2">{receipt.docNo}</td>
                         <td className="p-2">
-                          {new Date(receipt.docDate).toLocaleDateString()}
+                          {new Date(receipt.docDate).toLocaleDateString('en-GB')}
                         </td>
                         <td className="p-2">{receipt.debtorCode}</td>
                         <td className="p-2">
@@ -730,11 +731,11 @@ export default function TemporaryReceiptsPage() {
                   </div>
                   <div>
                     <Label className="text-sm font-semibold">Date</Label>
-                    <p className="text-sm">{new Date(receiptDetail.docDate).toLocaleDateString()}</p>
+                    <p className="text-sm">{new Date(receiptDetail.docDate).toLocaleDateString('en-GB')}</p>
                   </div>
                   <div>
                     <Label className="text-sm font-semibold">Payment Date</Label>
-                    <p className="text-sm">{new Date(receiptDetail.paymentDate).toLocaleDateString()}</p>
+                    <p className="text-sm">{new Date(receiptDetail.paymentDate).toLocaleDateString('en-GB')}</p>
                   </div>
                   <div>
                     <Label className="text-sm font-semibold">Customer</Label>
@@ -1073,22 +1074,40 @@ export default function TemporaryReceiptsPage() {
                           />
                         </div>
                         <div>
-                          <Label htmlFor="docDate">Date *</Label>
+                          <Label htmlFor="docDate">Date * (DD/MM/YYYY)</Label>
                           <Input
                             id="docDate"
-                            type="date"
-                            value={formData.docDate}
-                            onChange={(e) => setFormData({ ...formData, docDate: e.target.value })}
+                            type="text"
+                            placeholder="DD/MM/YYYY"
+                            value={formatISODateToDDMMYYYY(formData.docDate)}
+                            onChange={(e) => {
+                              const raw = e.target.value.trim()
+                              if (raw === '') {
+                                setFormData({ ...formData, docDate: new Date().toISOString().split('T')[0] })
+                                return
+                              }
+                              const iso = parseDDMMYYYYToISO(e.target.value)
+                              if (iso !== null) setFormData({ ...formData, docDate: iso })
+                            }}
                             required
                           />
                         </div>
                         <div>
-                          <Label htmlFor="paymentDate">Payment Date *</Label>
+                          <Label htmlFor="paymentDate">Payment Date * (DD/MM/YYYY)</Label>
                           <Input
                             id="paymentDate"
-                            type="date"
-                            value={formData.paymentDate}
-                            onChange={(e) => setFormData({ ...formData, paymentDate: e.target.value })}
+                            type="text"
+                            placeholder="DD/MM/YYYY"
+                            value={formatISODateToDDMMYYYY(formData.paymentDate)}
+                            onChange={(e) => {
+                              const raw = e.target.value.trim()
+                              if (raw === '') {
+                                setFormData({ ...formData, paymentDate: new Date().toISOString().split('T')[0] })
+                                return
+                              }
+                              const iso = parseDDMMYYYYToISO(e.target.value)
+                              if (iso !== null) setFormData({ ...formData, paymentDate: iso })
+                            }}
                             required
                           />
                         </div>

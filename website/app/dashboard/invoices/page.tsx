@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { PageHeader } from '@/components/dashboard/PageHeader'
+import { formatISODateToDDMMYYYY, parseDDMMYYYYToISO } from '@/lib/utils'
 
 interface Invoice {
   DocKey: number
@@ -773,7 +774,7 @@ export default function InvoicesPage() {
                     {invoices.map((invoice) => (
                       <tr key={invoice.DocKey} className="group hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                         <td className="px-6 py-3 font-semibold text-sm text-primary">{invoice.DocNo}</td>
-                        <td className="px-6 py-3 text-sm text-slate-600 dark:text-slate-400">{new Date(invoice.DocDate).toLocaleDateString()}</td>
+                        <td className="px-6 py-3 text-sm text-slate-600 dark:text-slate-400">{new Date(invoice.DocDate).toLocaleDateString('en-GB')}</td>
                         <td className="px-6 py-3 text-sm font-medium text-slate-800 dark:text-slate-200">{invoice.DebtorName || invoice.DebtorCode}</td>
                         <td className="px-6 py-3 text-sm font-mono text-slate-700 dark:text-slate-300">
                           {invoice.Total
@@ -901,11 +902,11 @@ export default function InvoicesPage() {
                   </div>
                   <div>
                     <Label className="text-sm font-semibold">Date</Label>
-                    <p className="text-sm">{new Date(invoiceDetail.DocDate).toLocaleDateString()}</p>
+                    <p className="text-sm">{new Date(invoiceDetail.DocDate).toLocaleDateString('en-GB')}</p>
                   </div>
                   <div>
                     <Label className="text-sm font-semibold">Due Date</Label>
-                    <p className="text-sm">{new Date(invoiceDetail.DueDate).toLocaleDateString()}</p>
+                    <p className="text-sm">{new Date(invoiceDetail.DueDate).toLocaleDateString('en-GB')}</p>
                   </div>
                   <div>
                     <Label className="text-sm font-semibold">Customer</Label>
@@ -1106,14 +1107,20 @@ export default function InvoicesPage() {
                   </div>
                 </div>
                 <div>
-                  <Label>Due Date</Label>
+                  <Label>Due Date (DD/MM/YYYY)</Label>
                   <Input
-                    type="date"
-                    value={invoiceDetail.DueDate ? new Date(invoiceDetail.DueDate).toISOString().split('T')[0] : ''}
-                    onChange={(e) => setInvoiceDetail({
-                      ...invoiceDetail,
-                      DueDate: e.target.value
-                    })}
+                    type="text"
+                    placeholder="DD/MM/YYYY"
+                    value={invoiceDetail.DueDate ? formatISODateToDDMMYYYY(invoiceDetail.DueDate) : ''}
+                    onChange={(e) => {
+                      const raw = e.target.value.trim()
+                      if (raw === '') {
+                        setInvoiceDetail({ ...invoiceDetail, DueDate: new Date().toISOString().split('T')[0] })
+                        return
+                      }
+                      const iso = parseDDMMYYYYToISO(e.target.value)
+                      if (iso !== null) setInvoiceDetail({ ...invoiceDetail, DueDate: iso })
+                    }}
                   />
                 </div>
                 <div className="flex gap-2 justify-end pt-4">
@@ -1188,22 +1195,40 @@ export default function InvoicesPage() {
                     </select>
                   </div>
                   <div>
-                    <Label htmlFor="DocDate">Invoice Date *</Label>
+                    <Label htmlFor="DocDate">Invoice Date * (DD/MM/YYYY)</Label>
                     <Input
                       id="DocDate"
-                      type="date"
-                      value={invoiceFormData.DocDate}
-                      onChange={(e) => setInvoiceFormData({ ...invoiceFormData, DocDate: e.target.value })}
+                      type="text"
+                      placeholder="DD/MM/YYYY"
+                      value={formatISODateToDDMMYYYY(invoiceFormData.DocDate)}
+                      onChange={(e) => {
+                        const raw = e.target.value.trim()
+                        if (raw === '') {
+                          setInvoiceFormData({ ...invoiceFormData, DocDate: new Date().toISOString().split('T')[0] })
+                          return
+                        }
+                        const iso = parseDDMMYYYYToISO(e.target.value)
+                        if (iso !== null) setInvoiceFormData({ ...invoiceFormData, DocDate: iso })
+                      }}
                       required
                     />
                   </div>
                   <div>
-                    <Label htmlFor="DueDate">Due Date *</Label>
+                    <Label htmlFor="DueDate">Due Date * (DD/MM/YYYY)</Label>
                     <Input
                       id="DueDate"
-                      type="date"
-                      value={invoiceFormData.DueDate}
-                      onChange={(e) => setInvoiceFormData({ ...invoiceFormData, DueDate: e.target.value })}
+                      type="text"
+                      placeholder="DD/MM/YYYY"
+                      value={formatISODateToDDMMYYYY(invoiceFormData.DueDate)}
+                      onChange={(e) => {
+                        const raw = e.target.value.trim()
+                        if (raw === '') {
+                          setInvoiceFormData({ ...invoiceFormData, DueDate: new Date().toISOString().split('T')[0] })
+                          return
+                        }
+                        const iso = parseDDMMYYYYToISO(e.target.value)
+                        if (iso !== null) setInvoiceFormData({ ...invoiceFormData, DueDate: iso })
+                      }}
                       required
                     />
                   </div>

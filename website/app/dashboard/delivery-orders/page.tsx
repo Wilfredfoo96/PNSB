@@ -15,6 +15,7 @@ import { Id } from '@/convex/_generated/dataModel'
 import { useUserRole } from '@/hooks/useUserRole'
 import { getPermissionsForRole } from '@/lib/permissions'
 import { useToast } from '@/components/ui/toast'
+import { formatISODateToDDMMYYYY, parseDDMMYYYYToISO } from '@/lib/utils'
 
 interface DeliveryOrder {
   DocKey: number
@@ -22,6 +23,7 @@ interface DeliveryOrder {
   DocDate: string
   DebtorCode: string
   DebtorName: string | null
+  Attention?: string | null
   Total: number | null
   NetTotal: number | null
   LocalNetTotal: number | null
@@ -210,10 +212,10 @@ export default function DeliveryOrdersPage() {
       }
       
       // Format as locale date string
-      return date.toLocaleDateString('en-MY', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
+      return date.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
       })
     } catch (error) {
       console.error('Error formatting date:', dateString, error)
@@ -343,6 +345,7 @@ export default function DeliveryOrdersPage() {
         DocNo: order.DocNo || order.docNo || '',
         DebtorName: order.DebtorName || order.debtorName || null,
         DebtorCode: order.DebtorCode || order.debtorCode || '',
+        Attention: order.Attention || order.attention || null,
         Total: order.Total || order.total || null,
         PostToStock: order.PostToStock || order.postToStock || 'N',
         Cancelled: order.Cancelled || order.cancelled || 'N',
@@ -820,7 +823,7 @@ export default function DeliveryOrdersPage() {
             <p>${doData.DocNo || ''}</p>
           </div>
           <div class="info">
-            <p><strong>Date:</strong> ${doData.DocDate ? new Date(doData.DocDate).toLocaleDateString() : ''}</p>
+            <p><strong>Date:</strong> ${doData.DocDate ? new Date(doData.DocDate).toLocaleDateString('en-GB') : ''}</p>
             <p><strong>Customer:</strong> ${doData.DebtorName || doData.DebtorCode || ''}</p>
             <p><strong>Customer Code:</strong> ${doData.DebtorCode || ''}</p>
           </div>
@@ -1622,7 +1625,8 @@ export default function DeliveryOrdersPage() {
                     <tr className="bg-slate-50 dark:bg-slate-800/50 sticky top-0 z-10 border-b border-slate-100 dark:border-slate-800">
                       <th className="px-6 py-4 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">DO No</th>
                       <th className="px-6 py-4 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Date</th>
-                      <th className="px-6 py-4 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Customer</th>
+                      <th className="px-6 py-4 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Patient Name</th>
+                      <th className="px-6 py-4 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Payee Name</th>
                       <th className="px-6 py-4 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total</th>
                       <th className="px-6 py-4 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Stock</th>
                       <th className="px-6 py-4 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Delivery Status</th>
@@ -1636,6 +1640,7 @@ export default function DeliveryOrdersPage() {
                         <td className="px-6 py-3 font-semibold text-sm text-primary">{doOrder.DocNo || '-'}</td>
                         <td className="px-6 py-3 text-sm text-slate-600 dark:text-slate-400">{formatDate(doOrder.DocDate)}</td>
                         <td className="px-6 py-3 text-sm font-medium text-slate-800 dark:text-slate-200">{doOrder.DebtorName || doOrder.DebtorCode || '-'}</td>
+                        <td className="px-6 py-3 text-sm text-slate-600 dark:text-slate-400">{doOrder.Attention || '-'}</td>
                         <td className="px-6 py-3 text-sm font-mono text-slate-700 dark:text-slate-300">
                           {doOrder.Total
                             ? new Intl.NumberFormat('en-MY', {
@@ -1799,7 +1804,6 @@ export default function DeliveryOrdersPage() {
                       <thead>
                         <tr className="border-b bg-gray-50">
                           <th className="text-left p-2 font-semibold text-sm">Seq</th>
-                          <th className="text-left p-2 font-semibold text-sm">Item Code</th>
                           <th className="text-left p-2 font-semibold text-sm">Description</th>
                           <th className="text-left p-2 font-semibold text-sm">UOM</th>
                           <th className="text-right p-2 font-semibold text-sm">Qty</th>
@@ -1812,7 +1816,6 @@ export default function DeliveryOrdersPage() {
                           doDetail.lineItems.map((item: any) => (
                             <tr key={item.DtlKey} className="border-b hover:bg-gray-50">
                               <td className="p-2 text-sm">{item.Seq}</td>
-                              <td className="p-2 text-sm">{item.ItemCode || '-'}</td>
                               <td className="p-2 text-sm">{item.Description || '-'}</td>
                               <td className="p-2 text-sm">{item.UOM || '-'}</td>
                               <td className="p-2 text-sm text-right">{item.Qty || '-'}</td>
@@ -1836,7 +1839,7 @@ export default function DeliveryOrdersPage() {
                           ))
                         ) : (
                           <tr>
-                            <td colSpan={7} className="p-4 text-center text-sm text-muted-foreground">
+                            <td colSpan={6} className="p-4 text-center text-sm text-muted-foreground">
                               No line items found
                             </td>
                           </tr>
@@ -2028,12 +2031,21 @@ export default function DeliveryOrdersPage() {
                         {/* Post to Stock - Hidden (defaults to 'N') */}
                         <input type="hidden" id="do-PostToStock" value={doFormData.PostToStock} />
                         <div>
-                          <Label htmlFor="do-DocDate">DO Date *</Label>
+                          <Label htmlFor="do-DocDate">DO Date * (DD/MM/YYYY)</Label>
                           <Input
                             id="do-DocDate"
-                            type="date"
-                            value={doFormData.DocDate}
-                            onChange={(e) => setDoFormData({ ...doFormData, DocDate: e.target.value })}
+                            type="text"
+                            placeholder="DD/MM/YYYY"
+                            value={formatISODateToDDMMYYYY(doFormData.DocDate)}
+                            onChange={(e) => {
+                              const raw = e.target.value.trim()
+                              if (raw === '') {
+                                setDoFormData({ ...doFormData, DocDate: new Date().toISOString().split('T')[0] })
+                                return
+                              }
+                              const iso = parseDDMMYYYYToISO(e.target.value)
+                              if (iso !== null) setDoFormData({ ...doFormData, DocDate: iso })
+                            }}
                             required
                           />
                         </div>
@@ -2075,7 +2087,6 @@ export default function DeliveryOrdersPage() {
                       <table className="w-full border-collapse">
                         <thead>
                           <tr className="border-b bg-gray-50">
-                            <th className="text-left p-2 font-semibold text-sm">Item Code</th>
                             <th className="text-left p-2 font-semibold text-sm">Description</th>
                             <th className="text-left p-2 font-semibold text-sm">UOM</th>
                             <th className="text-right p-2 font-semibold text-sm">Qty</th>
@@ -2091,11 +2102,6 @@ export default function DeliveryOrdersPage() {
                               key={`line-item-${index}-${item.ItemCode || index}`}
                               className={`border-b ${(item.Qty ?? 0) > 0 ? 'bg-emerald-50/70 dark:bg-emerald-900/20' : ''}`}
                             >
-                              <td className="p-2">
-                                <span className="text-xs text-gray-700 whitespace-nowrap" title={item.ItemCode}>
-                                  {item.ItemCode}
-                                </span>
-                              </td>
                               <td className="p-2 min-w-[120px]">
                                 <span className="text-sm text-gray-900 block break-words whitespace-normal">
                                   {item.Description || '-'}

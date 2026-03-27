@@ -22,7 +22,7 @@ export function Overview({ invoices }: OverviewProps) {
     // Initialize last 6 months
     for (let i = 5; i >= 0; i--) {
       const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
-      const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+      const monthKey = date.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
       months[monthKey] = { revenue: 0, expenses: 0 }
     }
     
@@ -31,7 +31,7 @@ export function Overview({ invoices }: OverviewProps) {
       if (!inv.DocDate) return
       
       const docDate = new Date(inv.DocDate)
-      const monthKey = docDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+      const monthKey = docDate.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
       const total = parseFloat((inv.Total || inv.TotalAmount || 0).toString())
       const paid = parseFloat((inv.PaymentAmt || inv.LocalPaymentAmt || 0).toString())
       

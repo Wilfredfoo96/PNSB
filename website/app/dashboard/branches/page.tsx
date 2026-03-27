@@ -181,7 +181,7 @@ export default function BranchesPage() {
                     <tr key={branch._id} className="border-b hover:bg-gray-50">
                       <td className="p-2">{branch.branchName}</td>
                       <td className="p-2">
-                        {new Date(branch.createdAt).toLocaleDateString()}
+                        {new Date(branch.createdAt).toLocaleDateString('en-GB')}
                       </td>
                       <td className="p-2">
                         <div className="flex gap-2">

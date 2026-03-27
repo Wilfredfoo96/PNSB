@@ -979,7 +979,7 @@ export default function SettingsPage() {
                             <td className="p-2">{branch.doNumbering || 'SOTP1'}</td>
                             <td className="p-2">{branch.trNumbering || '-'}</td>
                             <td className="p-2">
-                              {new Date(branch.createdAt).toLocaleDateString()}
+                              {new Date(branch.createdAt).toLocaleDateString('en-GB')}
                             </td>
                             <td className="p-2">
                               <div className="flex gap-2">

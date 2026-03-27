@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "convex:dev": "convex dev",
-    "convex:deploy": "convex deploy"
+    "convex:deploy": "convex deploy",
+    "deploy": "npx vercel --prod"
   },
   "dependencies": {
     "@clerk/clerk-sdk-node": "^4.13.23",
@@ -23,7 +24,7 @@
     "convex": "^1.10.0",
     "lucide-react": "^0.344.0",
     "mssql": "^12.2.0",
-    "next": "14.2.0",
+    "next": "14.2.35",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "svix": "^1.75.0",
@@ -39,6 +40,6 @@
     "eslint-config-next": "14.2.0",
     "postcss": "^8.4.35",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5.3.3"
+"typescript": "^5.3.3"
   }
 }

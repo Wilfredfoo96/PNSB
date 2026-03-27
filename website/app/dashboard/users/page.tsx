@@ -478,11 +478,11 @@ export default function UsersPage() {
                       {user.email}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
-                      {new Date(user.createdAt).toLocaleDateString()}
+                      {new Date(user.createdAt).toLocaleDateString('en-GB')}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
                       {user.lastSignInAt 
-                        ? new Date(user.lastSignInAt).toLocaleDateString()
+                        ? new Date(user.lastSignInAt).toLocaleDateString('en-GB')
                         : <span className="text-gray-400 italic">Never</span>
                       }
                     </td>

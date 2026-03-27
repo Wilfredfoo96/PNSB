@@ -33,7 +33,7 @@ const formatCellValue = (value: any): string => {
     // Check if it's a date timestamp (milliseconds since epoch)
     if (value > 1000000000000) {
       try {
-        return new Date(value).toLocaleString()
+        return new Date(value).toLocaleString('en-GB')
       } catch {
         return value.toString()
       }
@@ -47,7 +47,7 @@ const formatCellValue = (value: any): string => {
       try {
         const date = new Date(value)
         if (!isNaN(date.getTime())) {
-          return date.toLocaleString()
+          return date.toLocaleString('en-GB')
         }
       } catch {
         // Not a valid date, continue
