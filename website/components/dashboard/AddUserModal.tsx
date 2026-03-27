@@ -32,7 +32,7 @@ export default function AddUserModal({ isOpen, onClose, onSuccess }: AddUserModa
     bio: '',
     imageUrl: '',
     role: 'staff' as 'super_admin' | 'admin' | 'staff',
-    branchId: '' as string
+    branchIds: [] as string[]
   })
   const [isLoading, setIsLoading] = useState(false)
   const toast = useToast()
@@ -68,8 +68,8 @@ export default function AddUserModal({ isOpen, onClose, onSuccess }: AddUserModa
         bio: formData.bio.trim() || undefined,
         imageUrl: formData.imageUrl.trim() || undefined,
         role: formData.role,
-        branchId: formData.branchId && formData.branchId.trim() !== '' 
-          ? (formData.branchId as Id<'branches'>) 
+        branchIds: formData.branchIds.length > 0
+          ? formData.branchIds.map((id) => id as Id<'branches'>)
           : undefined,
       })
       
@@ -85,7 +85,7 @@ export default function AddUserModal({ isOpen, onClose, onSuccess }: AddUserModa
         bio: '',
         imageUrl: '',
         role: 'staff',
-        branchId: ''
+        branchIds: []
       })
     } catch (error) {
       toast.error('Failed to create user')
@@ -227,27 +227,35 @@ export default function AddUserModal({ isOpen, onClose, onSuccess }: AddUserModa
           </div>
 
           <div>
-            <Label htmlFor="branchId">Assign to Branch</Label>
-            <select
-              id="branchId"
-              value={formData.branchId}
-              onChange={(e) => handleInputChange('branchId', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              disabled={isLoading}
-            >
-              <option value="">No Branch Assigned</option>
+            <Label>Assign to Branches</Label>
+            <div className="mt-1 border border-gray-300 rounded-md max-h-40 overflow-y-auto p-2 space-y-1">
               {branches && branches.length > 0 ? (
                 branches.map((branch) => (
-                  <option key={branch._id} value={branch._id}>
+                  <label key={branch._id} className="flex items-center gap-2 px-1 py-1 rounded hover:bg-gray-50 cursor-pointer text-sm">
+                    <input
+                      type="checkbox"
+                      checked={formData.branchIds.includes(String(branch._id))}
+                      onChange={(e) => {
+                        const id = String(branch._id)
+                        setFormData((prev) => ({
+                          ...prev,
+                          branchIds: e.target.checked
+                            ? [...prev.branchIds, id]
+                            : prev.branchIds.filter((b) => b !== id),
+                        }))
+                      }}
+                      disabled={isLoading}
+                      className="accent-blue-600"
+                    />
                     {branch.branchName}
-                  </option>
+                  </label>
                 ))
               ) : (
-                <option value="" disabled>Loading branches...</option>
+                <p className="text-sm text-gray-400 px-1">Loading branches...</p>
               )}
-            </select>
+            </div>
             <p className="text-xs text-gray-500 mt-1">
-              Select a branch to assign this user to.
+              Select one or more branches to assign this user to.
             </p>
           </div>
 

@@ -127,34 +127,34 @@ export default function TemporaryReceiptsPage() {
   )
   const branches = useQuery(api.branches.getBranches) || []
   
-  // For Staff: Auto-select their branch and filter
+  // For Staff: Auto-select their first branch and filter
   useEffect(() => {
-    if (userRole === 'staff' && currentUser?.branchId && !selectedBranchId) {
-      setSelectedBranchId(currentUser.branchId)
+    if (userRole === 'staff' && currentUser?.branchIds?.length && !selectedBranchId) {
+      setSelectedBranchId(currentUser.branchIds[0])
     }
-  }, [userRole, currentUser?.branchId, selectedBranchId])
-  
+  }, [userRole, currentUser?.branchIds, selectedBranchId])
+
   // Get branch prefix for TR numbering
   const getBranchPrefix = (): string | null => {
     if (selectedBranchId) {
       const branch = branches.find((b: any) => b._id === selectedBranchId)
       return branch?.trNumbering || branch?.doNumbering || null
     }
-    // For staff, use their assigned branch
-    if (userRole === 'staff' && currentUser?.branchId) {
-      const branch = branches.find((b: any) => b._id === currentUser.branchId)
+    // For staff, use their first assigned branch
+    if (userRole === 'staff' && currentUser?.branchIds?.[0]) {
+      const branch = branches.find((b: any) => b._id === currentUser.branchIds![0])
       return branch?.trNumbering || branch?.doNumbering || null
     }
     return null
   }
-  
+
   // Get branchId for creating receipts
   const getBranchId = (): Id<'branches'> | undefined => {
     if (selectedBranchId) {
       return selectedBranchId
     }
-    if (userRole === 'staff' && currentUser?.branchId) {
-      return currentUser.branchId
+    if (userRole === 'staff' && currentUser?.branchIds?.[0]) {
+      return currentUser.branchIds[0]
     }
     return undefined
   }
@@ -301,7 +301,7 @@ export default function TemporaryReceiptsPage() {
       }
       
       // Add branch filter
-      const branchIdToFilter = selectedBranchId || (userRole === 'staff' && currentUser?.branchId ? currentUser.branchId : null)
+      const branchIdToFilter = selectedBranchId || (userRole === 'staff' && currentUser?.branchIds?.[0] ? currentUser.branchIds[0] : null)
       if (branchIdToFilter) {
         params.append('branchId', branchIdToFilter)
       }
@@ -534,14 +534,14 @@ export default function TemporaryReceiptsPage() {
       />
       <div className="px-8 pb-8 flex-1">
         {/* Branch Tabs - Show for Admin and Super Admin */}
-        {(permissions.canCreateBranch || (userRole === 'staff' && currentUser?.branchId)) && branches.length > 0 && (
+        {(permissions.canCreateBranch || (userRole === 'staff' && currentUser?.branchIds?.length)) && branches.length > 0 && (
           <BranchTabs
             selectedBranchId={selectedBranchId}
             onBranchChange={(branchId) => {
               setSelectedBranchId(branchId)
               fetchReceipts(1, search, status)
             }}
-            restrictToBranchId={userRole === 'staff' && currentUser?.branchId ? currentUser.branchId : null}
+            restrictToBranchIds={userRole === 'staff' ? (currentUser?.branchIds ?? null) : null}
           />
         )}
 

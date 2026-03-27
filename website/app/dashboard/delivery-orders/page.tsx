@@ -35,6 +35,7 @@ interface DeliveryOrder {
   Status?: string
   CurrencyCode: string
   LastModified: string
+  Remark4?: string | null
 }
 
 export default function DeliveryOrdersPage() {
@@ -60,12 +61,12 @@ export default function DeliveryOrdersPage() {
   )
   const branches = useQuery(api.branches.getBranches) || []
   
-  // For Staff: Auto-select their branch and filter
+  // For Staff: Auto-select their first branch and filter
   useEffect(() => {
-    if (userRole === 'staff' && currentUser?.branchId && !selectedBranchId) {
-      setSelectedBranchId(currentUser.branchId)
+    if (userRole === 'staff' && currentUser?.branchIds?.length && !selectedBranchId) {
+      setSelectedBranchId(currentUser.branchIds[0])
     }
-  }, [userRole, currentUser?.branchId, selectedBranchId])
+  }, [userRole, currentUser?.branchIds, selectedBranchId])
 
   // Track if component has mounted to avoid refetching on initial mount
   const [hasMounted, setHasMounted] = useState(false)
@@ -90,9 +91,9 @@ export default function DeliveryOrdersPage() {
       const branch = branches.find((b: any) => b._id === selectedBranchId)
       return branch?.doNumbering || null
     }
-    // For staff, use their assigned branch
-    if (userRole === 'staff' && currentUser?.branchId) {
-      const branch = branches.find((b: any) => b._id === currentUser.branchId)
+    // For staff, use their first assigned branch
+    if (userRole === 'staff' && currentUser?.branchIds?.[0]) {
+      const branch = branches.find((b: any) => b._id === currentUser.branchIds![0])
       return branch?.doNumbering || null
     }
     return null
@@ -146,7 +147,7 @@ export default function DeliveryOrdersPage() {
   const [loadingProducts, setLoadingProducts] = useState(false)
   
   // Get branch product templates
-  const branchIdForTemplates = selectedBranchId || (userRole === 'staff' && currentUser?.branchId ? currentUser.branchId : null)
+  const branchIdForTemplates = selectedBranchId || (userRole === 'staff' && currentUser?.branchIds?.[0] ? currentUser.branchIds[0] : null)
   const branchProductTemplates = useQuery(
     api.branchProductTemplates.getByBranch,
     branchIdForTemplates ? { branchId: branchIdForTemplates } : 'skip'
@@ -318,8 +319,8 @@ export default function DeliveryOrdersPage() {
         params.append('_t', Date.now().toString())
       }
       
-      // Add branchId filter - use selectedBranchId for Admin/Super Admin, or currentUser.branchId for Staff
-      const branchIdToFilter = selectedBranchId || (userRole === 'staff' && currentUser?.branchId ? currentUser.branchId : null)
+      // Add branchId filter - use selectedBranchId for Admin/Super Admin, or first branchId for Staff
+      const branchIdToFilter = selectedBranchId || (userRole === 'staff' && currentUser?.branchIds?.[0] ? currentUser.branchIds[0] : null)
       if (branchIdToFilter) {
         params.append('branchId', branchIdToFilter)
       }
@@ -346,6 +347,7 @@ export default function DeliveryOrdersPage() {
         DebtorName: order.DebtorName || order.debtorName || null,
         DebtorCode: order.DebtorCode || order.debtorCode || '',
         Attention: order.Attention || order.attention || null,
+        Remark4: order.Remark4 || order.remark4 || null,
         Total: order.Total || order.total || null,
         PostToStock: order.PostToStock || order.postToStock || 'N',
         Cancelled: order.Cancelled || order.cancelled || 'N',
@@ -595,7 +597,7 @@ export default function DeliveryOrdersPage() {
       })
 
       let lineItems: DOLineItem[]
-      const branchIdForTemplates = selectedBranchId || (userRole === 'staff' && currentUser?.branchId ? currentUser.branchId : null)
+      const branchIdForTemplates = selectedBranchId || (userRole === 'staff' && currentUser?.branchIds?.[0] ? currentUser.branchIds[0] : null)
       if (branchIdForTemplates && branchProductTemplates && branchProductTemplates.length > 0) {
         let currentTaxCodes = taxCodes
         if (currentTaxCodes.length === 0) {
@@ -932,7 +934,7 @@ export default function DeliveryOrdersPage() {
         }
         
         // Load branch product templates and populate line items (create mode only)
-        const branchIdForTemplates = selectedBranchId || (userRole === 'staff' && currentUser?.branchId ? currentUser.branchId : null)
+        const branchIdForTemplates = selectedBranchId || (userRole === 'staff' && currentUser?.branchIds?.[0] ? currentUser.branchIds[0] : null)
         if (branchIdForTemplates && branchProductTemplates && branchProductTemplates.length > 0) {
           // Ensure tax codes are loaded before applying templates
           let currentTaxCodes = taxCodes
@@ -1179,7 +1181,7 @@ export default function DeliveryOrdersPage() {
       const currencyRate = doFormData.CurrencyRate || 1
 
       // Get branchId and branchPrefix
-      const branchId = selectedBranchId || (userRole === 'staff' && currentUser?.branchId ? currentUser.branchId : null)
+      const branchId = selectedBranchId || (userRole === 'staff' && currentUser?.branchIds?.[0] ? currentUser.branchIds[0] : null)
       const branchPrefix = getBranchPrefix()
 
       const requestBody = {
@@ -1507,14 +1509,6 @@ export default function DeliveryOrdersPage() {
     )
   }
 
-  // Get payment status badge
-  const getPaymentStatusBadge = () => {
-    return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-100 dark:border-amber-800/50">
-        Pending
-      </span>
-    )
-  }
 
   return (
     <>
@@ -1546,14 +1540,14 @@ export default function DeliveryOrdersPage() {
       />
       <div className="px-8 pb-8 flex-1">
         {/* Branch Tabs - Show for Admin and Super Admin */}
-        {(permissions.canCreateBranch || (userRole === 'staff' && currentUser?.branchId)) && branches.length > 0 && (
+        {(permissions.canCreateBranch || (userRole === 'staff' && currentUser?.branchIds?.length)) && branches.length > 0 && (
           <BranchTabs
             selectedBranchId={selectedBranchId}
             onBranchChange={(branchId) => {
               setSelectedBranchId(branchId)
               setPage(1) // Reset to page 1 when switching branches
             }}
-            restrictToBranchId={userRole === 'staff' && currentUser?.branchId ? currentUser.branchId : null}
+            restrictToBranchIds={userRole === 'staff' ? (currentUser?.branchIds ?? null) : null}
           />
         )}
         <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col h-full">
@@ -1629,13 +1623,13 @@ export default function DeliveryOrdersPage() {
                       <th className="px-6 py-4 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Payee Name</th>
                       <th className="px-6 py-4 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total</th>
                       <th className="px-6 py-4 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Stock</th>
+                      <th className="px-6 py-4 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Created By</th>
                       <th className="px-6 py-4 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Delivery Status</th>
-                      <th className="px-6 py-4 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Payment</th>
                       <th className="px-6 py-4 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
-                    {deliveryOrders.map((doOrder) => (
+                    {deliveryOrders.filter((doOrder) => !transferStatusMap[doOrder.DocKey]).map((doOrder) => (
                       <tr key={doOrder.DocKey} className="group hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                         <td className="px-6 py-3 font-semibold text-sm text-primary">{doOrder.DocNo || '-'}</td>
                         <td className="px-6 py-3 text-sm text-slate-600 dark:text-slate-400">{formatDate(doOrder.DocDate)}</td>
@@ -1654,8 +1648,8 @@ export default function DeliveryOrdersPage() {
                             {doOrder.PostToStock === 'Y' ? 'Yes' : 'No'}
                           </span>
                         </td>
+                        <td className="px-6 py-3 text-sm text-slate-600 dark:text-slate-400">{doOrder.Remark4 || '-'}</td>
                         <td className="px-6 py-3">{getDeliveryStatusBadge(doOrder)}</td>
-                        <td className="px-6 py-3">{getPaymentStatusBadge()}</td>
                         <td className="px-6 py-3 text-right">
                           <div className="row-actions flex items-center justify-end gap-1">
                             {(doOrder.Status === 'Draft' || doOrder.DocStatus === 'D' || doOrder.Status === 'Unknown') && !transferStatusMap[doOrder.DocKey] && (
@@ -2059,7 +2053,7 @@ export default function DeliveryOrdersPage() {
                             id="do-Branch"
                             value={
                               (() => {
-                                const branchId = selectedBranchId || (userRole === 'staff' && currentUser?.branchId ? currentUser.branchId : null)
+                                const branchId = selectedBranchId || (userRole === 'staff' && currentUser?.branchIds?.[0] ? currentUser.branchIds[0] : null)
                                 const branch = branches.find((b: { _id: typeof selectedBranchId }) => b._id === branchId)
                                 return branch ? (branch.alias || branch.branchName) : '—'
                               })()

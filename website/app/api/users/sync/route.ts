@@ -61,10 +61,10 @@ export async function POST(request: NextRequest) {
         if (!existingUser) {
           mutationArgs.role = 'staff' // Default role for new users
         } else {
-          // Preserve existing role and branch for existing users
+          // Preserve existing role and branches for existing users
           // Don't pass role - upsertUser will preserve it
-          if (existingUser.branchId) {
-            mutationArgs.branchId = existingUser.branchId
+          if (existingUser.branchIds) {
+            mutationArgs.branchIds = existingUser.branchIds
           }
         }
         

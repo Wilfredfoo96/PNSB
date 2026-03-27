@@ -552,7 +552,7 @@ public class InvoiceService : IInvoiceService
         var query = "SELECT DocStatus FROM ARInvoice WHERE DocKey = @DocKey";
         var parameters = new Dictionary<string, object> { { "DocKey", docKey } };
         var status = await _dbService.ExecuteScalarAsync<string>(query, parameters);
-        return status == "D";
+        return status?.Trim() == "D";
     }
 
     private async Task<List<InvoiceLine>> GetInvoiceLinesAsync(long docKey)
@@ -585,8 +585,8 @@ public class InvoiceService : IInvoiceService
 
     private static Invoice MapInvoice(DataRow row)
     {
-        var cancelled = row["Cancelled"]?.ToString() == "T";
-        var docStatus = row["DocStatus"]?.ToString() ?? "D";
+        var cancelled = row["Cancelled"]?.ToString()?.Trim() == "T";
+        var docStatus = row["DocStatus"]?.ToString()?.Trim() ?? "D";
         
         string status = docStatus switch
         {

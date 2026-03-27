@@ -25,7 +25,7 @@ interface ConvexUser {
   imageUrl?: string
   bio?: string
   role?: 'super_admin' | 'admin' | 'staff'
-  branchId?: Id<'branches'>
+  branchIds?: Id<'branches'>[]
   createdAt: number
   updatedAt: number
   lastSignInAt?: number
@@ -492,8 +492,10 @@ export default function UsersPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
-                      {user.branchId 
-                        ? branches.find(b => b._id === user.branchId)?.branchName || 'Unknown Branch'
+                      {user.branchIds && user.branchIds.length > 0
+                        ? user.branchIds
+                            .map((id) => branches.find((b) => b._id === id)?.branchName || 'Unknown')
+                            .join(', ')
                         : <span className="text-gray-400 italic">Not Assigned</span>
                       }
                     </td>

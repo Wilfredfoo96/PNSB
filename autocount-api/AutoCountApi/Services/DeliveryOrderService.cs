@@ -236,9 +236,9 @@ public class DeliveryOrderService : IDeliveryOrderService
 
         // Get customer details for required fields (including address)
         var getDebtorQuery = @"
-            SELECT CompanyName, DisplayTerm, CurrencyCode, Address1, Address2, Address3, Address4,
+            SELECT CompanyName, DisplayTerm, CurrencyCode, Address1, Address2, Address3, Address4, Attention,
                    (SELECT TOP 1 BankSellRate FROM Currency WHERE CurrencyCode = Debtor.CurrencyCode) as CurrencyRate
-            FROM Debtor 
+            FROM Debtor
             WHERE AccNo = @DebtorCode";
         var debtorParams = new Dictionary<string, object> { { "DebtorCode", request.DebtorCode } };
         var debtorResult = await _dbService.ExecuteQueryAsync(getDebtorQuery, debtorParams);
@@ -252,7 +252,8 @@ public class DeliveryOrderService : IDeliveryOrderService
         string? invAddr2 = null;
         string? invAddr3 = null;
         string? invAddr4 = null;
-        
+        string? debtorAttention = null;
+
         if (debtorResult.Rows.Count > 0)
         {
             var row = debtorResult.Rows[0];
@@ -268,6 +269,7 @@ public class DeliveryOrderService : IDeliveryOrderService
             invAddr2 = row["Address2"]?.ToString();
             invAddr3 = row["Address3"]?.ToString();
             invAddr4 = row["Address4"]?.ToString();
+            debtorAttention = row["Attention"]?.ToString();
         }
         
         // Get TaxEntityID from TaxEntity table by name (default to first active if name not provided)
@@ -371,7 +373,7 @@ public class DeliveryOrderService : IDeliveryOrderService
                 PostToStock, Transferable, Cancelled, DocStatus,
                 PrintCount, LastModified, LastModifiedUserID, CreatedTimeStamp, CreatedUserID,
                 CanSync, LastUpdate, Guid, InclusiveTax, RoundingMethod,
-                SalesLocation, CalcDiscountOnUnitPrice, MultiPrice, TaxEntityID, Remark4
+                SalesLocation, CalcDiscountOnUnitPrice, MultiPrice, TaxEntityID, Remark4, Attention
             )
             VALUES (
                 @DocKey, @DocNo, @DocDate, @DebtorCode, @DebtorName, @Ref, @Description,
@@ -385,7 +387,7 @@ public class DeliveryOrderService : IDeliveryOrderService
                 'F', 'T', 'F', 'D',
                 0, @LastModified, @UserID, @CreatedTimeStamp, @UserID,
                 'Y', @LastUpdate, NEWID(), 'F', 4,
-                'HQ', 'F', 'P1', @TaxEntityID, @Remark4
+                'HQ', 'F', 'P1', @TaxEntityID, @Remark4, @Attention
             );
         ";
 
@@ -422,6 +424,7 @@ public class DeliveryOrderService : IDeliveryOrderService
             { "TaxCurrencyTaxableAmt", taxCurrencyTaxableAmt },
             { "TaxEntityID", (object?)taxEntityID ?? DBNull.Value },
             { "Remark4", (object?)remark4 ?? DBNull.Value },
+            { "Attention", (object?)debtorAttention ?? DBNull.Value },
             { "LastModified", now },
             { "UserID", validUserID },
             { "CreatedTimeStamp", now },
@@ -896,7 +899,7 @@ public class DeliveryOrderService : IDeliveryOrderService
         var query = "SELECT DocStatus FROM DO WHERE DocKey = @DocKey";
         var parameters = new Dictionary<string, object> { { "DocKey", docKey } };
         var status = await _dbService.ExecuteScalarAsync<string>(query, parameters);
-        return status == "D";
+        return status?.Trim() == "D";
     }
 
     private async Task<List<DeliveryOrderLine>> GetDeliveryOrderLinesAsync(long docKey)
@@ -927,8 +930,8 @@ public class DeliveryOrderService : IDeliveryOrderService
 
     private static DeliveryOrder MapDeliveryOrder(DataRow row)
     {
-        var cancelled = row["Cancelled"]?.ToString() == "T";
-        var docStatus = row["DocStatus"]?.ToString() ?? "D";
+        var cancelled = row["Cancelled"]?.ToString()?.Trim() == "T";
+        var docStatus = row["DocStatus"]?.ToString()?.Trim() ?? "D";
         
         string status = docStatus switch
         {

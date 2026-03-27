@@ -17,12 +17,12 @@ interface Branch {
 interface BranchTabsProps {
   selectedBranchId: Id<'branches'> | null
   onBranchChange: (branchId: Id<'branches'> | null) => void
-  /** When set (e.g. staff's assigned branch), only this branch tab is shown; no "All Branches". */
-  restrictToBranchId?: Id<'branches'> | null
+  /** When set, only branches in this list are shown; no "All Branches" option. */
+  restrictToBranchIds?: Id<'branches'>[] | null
   className?: string
 }
 
-export function BranchTabs({ selectedBranchId, onBranchChange, restrictToBranchId, className }: BranchTabsProps) {
+export function BranchTabs({ selectedBranchId, onBranchChange, restrictToBranchIds, className }: BranchTabsProps) {
   const branches = useQuery(api.branches.getBranches)
 
   // Don't render until we have fresh data (branches is undefined while loading)
@@ -34,19 +34,19 @@ export function BranchTabs({ selectedBranchId, onBranchChange, restrictToBranchI
     return null
   }
 
-  // For staff: only show branches they have access to (e.g. their assigned branch)
+  // For staff: only show branches they have access to
   const visibleBranches = useMemo(() => {
-    const list = restrictToBranchId
-      ? branches.filter((b: Branch) => b._id === restrictToBranchId)
+    const list = restrictToBranchIds && restrictToBranchIds.length > 0
+      ? branches.filter((b: Branch) => restrictToBranchIds.includes(b._id))
       : [...branches]
     return list.sort((a: Branch, b: Branch) => {
       const nameA = (a.alias || a.branchName).toLowerCase()
       const nameB = (b.alias || b.branchName).toLowerCase()
       return nameA.localeCompare(nameB)
     })
-  }, [branches, restrictToBranchId])
+  }, [branches, restrictToBranchIds])
 
-  const showAllBranchesOption = !restrictToBranchId
+  const showAllBranchesOption = !restrictToBranchIds || restrictToBranchIds.length === 0
 
   return (
     <div className={cn('flex gap-2 border-b border-slate-200 dark:border-slate-700 pb-4 mb-6', className)}>
